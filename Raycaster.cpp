@@ -132,10 +132,9 @@ void drawRays3D()
 		glLineWidth(3); glBegin(GL_LINES); glVertex2i(px, py); glVertex2i(rx, ry); glEnd(); 
 		//Draw 3D Walls
 		float ca = pa - ra; if(ca < 0) {ca += 2 * PI;} if (ca > 2 * PI) { ca -= 2 * PI;} disT = disT * cos(ca); //Fix fisheye warping
-		float lineH = (mapS * 320)/disT; if (lineH > 320) {lineH = 320;} //Line height
-		float bottomOffset = 200 - lineH/2; //Line offset from bottom of window
-		float topOffset = 100; //Line offset from top of window
-		glLineWidth(8); glBegin(GL_LINES); glVertex2i (r * 8 + 530, topOffset); glVertex2i (r * 8 + 530, lineH + bottomOffset); glEnd();
+		float lineH = (mapS * 500)/disT; if (lineH > 320) {lineH = 320;} //Line height
+		float lineO = 180 - lineH/2; //Line offset from bottom of window
+		glLineWidth(8); glBegin(GL_LINES); glVertex2i (r * 8 + 530, lineO); glVertex2i (r * 8 + 530, lineH + lineO); glEnd();
 		ra += DR; if(ra < 0) {ra += 2 * PI;} if (ra > 2 * PI) { ra -= 2 * PI;}
 	}
 }
