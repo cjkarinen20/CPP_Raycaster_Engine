@@ -133,53 +133,12 @@ void drawRays3D()
 		//Draw 3D Walls
 		float ca = pa - ra; if(ca < 0) {ca += 2 * PI;} if (ca > 2 * PI) { ca -= 2 * PI;} disT = disT * cos(ca); //Fix fisheye warping
 		float lineH = (mapS * 320)/disT; if (lineH > 320) {lineH = 320;} //Line height
-		float lineO = 160 - lineH/2; //Line offset
-		glLineWidth(8); glBegin(GL_LINES); glVertex2i (r * 8 + 530, 0); glVertex2i (r * 8 + 530, lineH + lineO); glEnd();
+		float bottomOffset = 200 - lineH/2; //Line offset from bottom of window
+		float topOffset = 100; //Line offset from top of window
+		glLineWidth(8); glBegin(GL_LINES); glVertex2i (r * 8 + 530, topOffset); glVertex2i (r * 8 + 530, lineH + bottomOffset); glEnd();
 		ra += DR; if(ra < 0) {ra += 2 * PI;} if (ra > 2 * PI) { ra -= 2 * PI;}
 	}
 }
-/*
-	int r, mx, my, mp, dof; float rx, ry, ra, xo, yo, disT;
-	ra = pa - DR * 30; if(ra < 0){ra += 2 * PI;} if (ra > 2 * PI){ ra -= 2 * PI;}
-	for (r = 0; r < 60; r++)
-	{
-		//Check horizontal lines
-		dof = 0;
-		float disH = 1000000, hx = px, hy = py;
-		float aTan = -1/tan(ra);
-		if ( ra > PI) { ry = (((int) py >> 6) << 6) - 0.0001; rx = ( py - ry) * aTan + px; yo = -64; xo = -yo * aTan;} //Looking down
-		if ( ra < PI) { ry = (((int) py >> 6) << 6) + 64; rx = (py - ry) * aTan + px; yo = 64; xo = -yo * aTan;} //Looking up
-		if (ra == 0 || ra == PI) { rx = px; ry = py; dof = 8;} //Looking straight left or right
-		while(dof < 8)
-		{
-			mx = (int)(rx) >> 6; my = (int)(ry) >> 6; mp = my * mapX + mx;
-			if ( mp < mapX * mapY && map[mp] == 1) {hx=rx; hy=ry; disH=dist(px,py,hx,hy,ra); dof = 8;} //Hit wall
-			else { rx += xo; ry += yo; dof += 1;} //If not hit a wall
-		}
-		//Check vertical lines
-		dof = 0;
-		float disV = 1000000, vx = px, vy = py;
-		float nTan = -tan(ra);
-		if ( ra > P2 && ra < P3) { rx = (((int) px >> 6) << 6) - 0.0001; ry = (px - rx) * nTan + py; xo = -64; yo = -xo * nTan;} //Looking left
-		if ( ra < P2 || ra > P3) { rx = (((int) px >> 6) << 6) + 64; ry = (px - rx) * nTan + py; xo = 64; yo = -xo * nTan;} //Looking right
-		if (ra == 0 || ra == PI) { rx = px; ry = py; dof = 8;} //Looking straight up or down
-		while(dof < 8)
-		{
-			mx = (int)(rx) >> 6; my = (int)(ry) >> 6; mp = my * mapX + mx;
-			if ( mp < mapX * mapY && map[mp] == 1) {vx=rx; vy=ry; disV=dist(px,py,vx,vy,ra); dof = 8;} //Hit wall
-			else { rx += xo; ry += yo; dof += 1;} //If not hit a wall
-		}
-		if(disV < disH) {rx = vx; ry = vy; disT = disV;} //Vertical wall hit
-		if(disH < disV) {rx = hx; ry = hy; disT = disH;} // Horizontal wall hit
-		glColor3f(1,0,0); glLineWidth(3); glBegin(GL_LINES); glVertex2i (px, py); glVertex2i (rx, ry); glEnd();
-		//Draw 3D Walls
-		float ca = pa - ra; if(ca < 0) {ca += 2 * PI;} if (ca > 2 * PI) { ca -= 2 * PI;} disT = disT * cos(ca); //Fix fisheye warping
-		float lineH = (mapS * 320)/disT; if (lineH > 320) {lineH = 320;} //Line height
-		float lineO = 160 - lineH/2; //Line offset
-		glLineWidth(8); glBegin(GL_LINES); glVertex2i (r * 8 + 530, 0); glVertex2i (r * 8 + 530, lineH + lineO); glEnd();
-		ra += DR; if(ra < 0) {ra += 2 * PI;} if (ra > 2 * PI) { ra -= 2 * PI;}
-	}
-*/
 
 
 void display()
