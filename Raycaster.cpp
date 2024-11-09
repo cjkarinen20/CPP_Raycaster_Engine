@@ -7,11 +7,21 @@
 #define P3 3*PI/2
 #define DR 0.0174533 //One degree in radians
 
+typedef struct
+{
+	int w,a,d,s; //Button state
+}
+ButtonKeys; ButtonKeys Keys;
+
 float px, py, pdx, pdy, pa; //Player position
 float dist(float ax, float ay, float bx, float by, float ang)
 {
 	return (sqrt((bx-ax) * (bx-ax) + (by-ay) * (by-ay)));
 }
+float degToRad(float a){ return a*PI/180.0;}
+float FixAng(float a){if (a > 359){a -= 360;} if (a < 0){a += 360;} return a;}
+float frame1, frame2, fps;
+float turnSpeed, walkSpeed;
 
 void init()
 {
@@ -145,23 +155,42 @@ void drawRays3D()
 	}
 }
 
-//Function to determine when a key has been pressed
-void buttons(unsigned char key, int x, int y)
-{
-	if (key == 'a'){ pa -= 0.1; if (pa < 0) {pa += 2 * PI;} pdx = cos(pa) * 5; pdy = sin(pa) * 5;}
-	if (key == 'd'){ pa += 0.1; if (pa > 2 * PI){pa -= 2 * PI;} pdx = cos(pa) * 5; pdy = sin(pa) * 5;}
-	if (key == 'w'){ px += pdx; py += pdy;}
-	if (key == 's'){ px -= pdx; py -= pdy;}
-	glutPostRedisplay();
-}
-
 void display()
 {
+	//Frames per second
+	frame2 = glutGet(GLUT_ELAPSED_TIME); fps = (frame2 - frame1); frame1 = glutGet(GLUT_ELAPSED_TIME);
+	
+	turnSpeed = 0.005; walkSpeed = 0.025;
+	
+	if (Keys.a==1){ pa -= turnSpeed * fps; if (pa < 0) {pa += 2 * PI;} pdx = cos(pa) * 5; pdy = sin(pa) * 5;}
+	if (Keys.d==1){ pa += turnSpeed * fps; if (pa > 2 * PI){pa -= 2 * PI;} pdx = cos(pa) * 5; pdy = sin(pa) * 5;}
+	if (Keys.w==1){ px += pdx * walkSpeed * fps; py += pdy * walkSpeed* fps;}
+	if (Keys.s==1){ px -= pdx * walkSpeed * fps; py -= pdy * walkSpeed * fps;}
+	glutPostRedisplay();
+	
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	drawMap2D();
 	drawPlayer();
 	drawRays3D();
 	glutSwapBuffers();
+}
+
+void ButtonDown(unsigned char key,int x,int y)                                  //keyboard button pressed down
+{
+ if(key=='a'){ Keys.a=1;} 	
+ if(key=='d'){ Keys.d=1;} 
+ if(key=='w'){ Keys.w=1;}
+ if(key=='s'){ Keys.s=1;}
+ glutPostRedisplay();
+ }
+ 
+void ButtonUp(unsigned char key,int x,int y)                                    //keyboard button pressed up
+{
+ if(key=='a'){ Keys.a=0;} 	
+ if(key=='d'){ Keys.d=0;} 
+ if(key=='w'){ Keys.w=0;}
+ if(key=='s'){ Keys.s=0;}
+ glutPostRedisplay();
 }
 
 void resize (int w, int h)
@@ -178,7 +207,8 @@ int main(int argc, char** argv)
 	init();
 	glutDisplayFunc(display);
 	glutReshapeFunc(resize);
-	glutKeyboardFunc(buttons);
+	glutKeyboardFunc(ButtonDown);
+	glutKeyboardUpFunc(ButtonUp);
 	glutMainLoop();
 	
 }
