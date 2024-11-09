@@ -85,7 +85,6 @@ void drawMap2D() //Draw the map
 //Cast rays
 void drawRays3D()
 {
-
 	int r, mx, my, mp, dof; 
 	float rx, ry, ra, xo, yo, disT; 
 	ra = pa - DR * 30;
@@ -164,8 +163,23 @@ void display()
 	
 	if (Keys.a==1){ pa -= turnSpeed * fps; if (pa < 0) {pa += 2 * PI;} pdx = cos(pa) * 5; pdy = sin(pa) * 5;}
 	if (Keys.d==1){ pa += turnSpeed * fps; if (pa > 2 * PI){pa -= 2 * PI;} pdx = cos(pa) * 5; pdy = sin(pa) * 5;}
-	if (Keys.w==1){ px += pdx * walkSpeed * fps; py += pdy * walkSpeed* fps;}
-	if (Keys.s==1){ px -= pdx * walkSpeed * fps; py -= pdy * walkSpeed * fps;}
+	
+	//Collision
+	int xo = 0; if (pdx < 0){xo = -20;} else {xo = 20;}
+	int yo = 0; if (pdy < 0){yo = -20;} else {yo = 20;}
+	int ipx = px/64.0, ipx_add_xo = (px + xo)/64.0, ipx_sub_xo = (px-xo)/64.0;
+	int ipy = py/64.0, ipy_add_yo = (py + yo)/64.0, ipy_sub_yo = (py-yo)/64.0;
+	
+	if (Keys.w==1)
+	{ 
+		if (map[ipy * mapX + ipx_add_xo] == 0) {px += pdx * walkSpeed * fps;}
+		if (map[ipy_add_yo * mapX + ipx] == 0) {py += pdy * walkSpeed * fps;}
+	}
+	if (Keys.s==1)
+	{ 
+		if (map[ipy * mapX + ipx_sub_xo] == 0) {px -= pdx * walkSpeed * fps;}
+		if (map[ipy_sub_yo * mapX + ipx] == 0) {py -= pdy * walkSpeed * fps;}
+	}
 	glutPostRedisplay();
 	
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
