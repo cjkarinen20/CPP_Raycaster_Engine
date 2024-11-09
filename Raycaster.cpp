@@ -8,6 +8,17 @@
 #define DR 0.0174533 //One degree in radians
 
 float px, py, pdx, pdy, pa; //Player position
+float dist(float ax, float ay, float bx, float by, float ang)
+{
+	return (sqrt((bx-ax) * (bx-ax) + (by-ay) * (by-ay)));
+}
+
+void init()
+{
+	glClearColor(0.3, 0.3, 0.3, 0);
+	gluOrtho2D(0, 1024, 512, 0);
+	px=300; py=300; pdx = cos(pa) * 5; pdy = sin(pa) * 5;
+}
 
 //Draw player as a colored pixel/cube
 void drawPlayer()
@@ -59,11 +70,6 @@ void drawMap2D() //Draw the map
 
 		}
 	}
-}
-
-float dist(float ax, float ay, float bx, float by, float ang)
-{
-	return (sqrt((bx-ax) * (bx-ax) + (by-ay) * (by-ay)));
 }
 
 //Cast rays
@@ -139,16 +145,6 @@ void drawRays3D()
 	}
 }
 
-
-void display()
-{
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	drawMap2D();
-	drawPlayer();
-	drawRays3D();
-	glutSwapBuffers();
-}
-
 //Function to determine when a key has been pressed
 void buttons(unsigned char key, int x, int y)
 {
@@ -159,21 +155,29 @@ void buttons(unsigned char key, int x, int y)
 	glutPostRedisplay();
 }
 
-void init()
+void display()
 {
-	glClearColor(0.3, 0.3, 0.3, 0);
-	gluOrtho2D(0, 1024, 512, 0);
-	px=300; py=300; pdx = cos(pa) * 5; pdy = sin(pa) * 5;
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	drawMap2D();
+	drawPlayer();
+	drawRays3D();
+	glutSwapBuffers();
 }
 
+void resize (int w, int h)
+{
+	glutReshapeWindow(1024, 512);
+}
 int main(int argc, char** argv)
 {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
 	glutInitWindowSize(1024, 512);
+	glutInitWindowPosition(200,200);
 	glutCreateWindow("Raycaster");
 	init();
 	glutDisplayFunc(display);
+	glutReshapeFunc(resize);
 	glutKeyboardFunc(buttons);
 	glutMainLoop();
 	
