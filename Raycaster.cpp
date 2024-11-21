@@ -2,6 +2,15 @@
 #include <stdlib.h>
 #include <GL/glut.h>
 #include <math.h>
+#include "Textures/Brick1.ppm"
+#include "Textures/Brick2.ppm"
+#include "Textures/Brick3.ppm"
+#include "Textures/Stone1.ppm"
+#include "Textures/Tile1.ppm"
+#include "Textures/Metal1.ppm"
+#include "Textures/Grate1.ppm"
+#include "Textures/Grate2.ppm"
+#include "Textures/Grate3.ppm"
 #define PI 3.1415926535
 #define P2 PI/2
 #define P3 3*PI/2
@@ -56,14 +65,37 @@ int mapS = 64;
 
 int mapW[] = //Map Wall Layout 
 {
-	1,1,1,1,1,1,1,1,
-	1,0,0,4,0,0,0,1,
-	1,0,0,2,0,0,0,1,
-	1,0,0,2,0,0,0,1,
-	1,0,0,2,0,2,2,1,
-	1,0,0,2,0,0,0,1,
-	1,0,0,2,0,0,0,1,
-	1,1,1,1,1,1,1,1,
+	2,2,2,2,2,3,2,2,
+	2,0,0,4,0,0,0,2,
+	2,0,0,2,0,0,0,3,
+	2,0,0,2,0,0,0,2,
+	2,0,0,2,0,2,2,2,
+	2,0,0,2,0,0,0,2,
+	2,0,0,2,0,0,0,2,
+	2,2,2,2,2,3,2,2,
+};
+int mapF[]=	//Map Floor Layout
+{
+ 	0,0,0,0,0,0,0,0,
+ 	0,0,0,0,1,1,0,0,
+ 	0,0,0,0,2,0,0,0,
+ 	0,0,0,0,0,0,0,0,
+	0,0,2,0,0,0,0,0,
+	0,0,0,0,0,0,0,0,
+ 	0,1,1,1,1,0,0,0,
+ 	0,0,0,0,0,0,0,0,	
+};
+
+int mapC[]=	//Map Ceiling Layout
+{
+ 	1,1,1,1,1,1,1,1,
+ 	1,1,1,1,1,1,1,1,
+ 	1,1,1,1,1,1,1,1,
+ 	1,1,1,1,1,1,1,1,
+ 	1,1,1,1,1,1,1,1,
+ 	1,1,1,1,1,1,1,1,
+ 	1,1,1,1,1,1,1,1,
+ 	1,1,1,1,1,1,1,1,	
 };
 
 int Map_Textures[]=               				//32x32 map textures
@@ -308,28 +340,61 @@ void drawRays3D()
 		glLineWidth(3); glBegin(GL_LINES); glVertex2i(px, py); glVertex2i(rx, ry); glEnd(); 
 		
 		
-		//Draw 3D Walls
+
 		float ca = pa - ra; if(ca < 0) {ca += 2 * PI;} if (ca > 2 * PI) { ca -= 2 * PI;} disT = disT * cos(ca); //Fix fisheye warping
 		float lineH = (mapS * 500)/disT; 
 		float texY_Step = 32.0/(float)lineH;
 		float texY_Offset = 0;
 		if (lineH > 320) {texY_Offset = (lineH - 320)/2.0; lineH = 320;} //Line height
-		float lineO = 180 - lineH/2; //Line offset
+		float lineO = 160 - lineH/2; //Line offset
 		
+		//Draw Walls
 		int y;
-		float texY = texY_Offset * texY_Step + hmt * 32;
+		float texY = texY_Offset * texY_Step; //hmt * 32;
 		float texX;
 		if (shade == 1){texX = (int)(rx/2.0) % 32; if (ra > 180) {texX = 31 - texX;}}
 		else {texX = (int)(ry / 2.0) % 32; if (ra > 90 && ra < 270) {texX = 31 - texX;}}
 		for (y = 0; y < lineH; y++)
 		{
-			float c = Map_Textures[(int)(texY) * 32 + (int)(texX)] * shade;
-			glColor3f(c,c,c);
+			/*float c = Map_Textures[(int)(texY) * 32 + (int)(texX)] * shade;
+			if(hmt==0){ glColor3f(c    , c    , c/2.0);} //Checkerboard = yellow
+   			if(hmt==1){ glColor3f(c    , c/2.0, c/2.0);} //Brick = red
+   			if(hmt==2){ glColor3f(c/2.0, c/2.0, c    );} //window = blue
+   			if(hmt==3){ glColor3f(c/2.0, c    , c/2.0);} //Door = green
 			glPointSize(8); glBegin(GL_POINTS); glVertex2i (r * 8 + 530, y + lineO); glEnd();
+			*/
+			int pixel = ((int)texY*32+(int)texX)*3;
+			int red = Brick1[pixel+0] * shade;
+			int green = Brick1[pixel+1] * shade;
+			int blue = Brick1[pixel+2] * shade;
+			glPointSize(8); glColor3ub(red, green, blue); glBegin(GL_POINTS); glVertex2i (r * 8 + 530, y + lineO); glEnd();
 			texY += texY_Step;
 		}
+		//Draw Floors
+		for(y = lineO + lineH; y < 320; y++)
+ 		{
+            float dy = y - (320 / 2.0), deg = degToRad(ra), raFix = cos(degToRad(FixAng(pa - ra)));
+            texX = px / 2 + cos(deg) * 158 * 32 / dy / raFix;
+            texY = py / 2 - sin(deg) * 158 * 32 / dy / raFix;
+            
+            int mp = mapF[(int)(texY / 32.0) * mapX + (int)(texX / 32.0)] * 32 * 32;
+            float c = Map_Textures[((int)(texY) & 31) * 32 + ((int)(texX) & 31) + mp] * 0.7;
+            glColor3f(c / 1.3, c / 1.3, c); glPointSize(8);
+            glBegin(GL_POINTS); glVertex2i(r * 8 + 530, y); glEnd();
 
-		ra += DR; if(ra < 0) {ra += 2 * PI;} if (ra > 2 * PI) { ra -= 2 * PI;}
+ 			//---draw ceiling---
+  			mp = mapC[(int)(texY/32.0) * mapX+(int)(texX/32.0)] * 32 * 32;
+  			c = Map_Textures[((int)(texY)&31) * 32 + ((int)(texX) & 31)+mp] * 0.7;
+  			glColor3f(c/2.0,c/1.2,c/2.0);
+			glPointSize(8);
+			glBegin(GL_POINTS);
+			glVertex2i(r*8+530,320-y);
+			glEnd();
+			
+ 		}
+ 		ra += DR; if(ra < 0) {ra += 2 * PI;} if (ra > 2 * PI) { ra -= 2 * PI;}
+		
+
 	}
 }
 
@@ -366,6 +431,8 @@ void display()
 	drawPlayer();
 	drawRays3D();
 	glutSwapBuffers();
+	
+
 }
 
 void ButtonDown(unsigned char key,int x,int y)                                  //keyboard button pressed down
@@ -374,8 +441,21 @@ void ButtonDown(unsigned char key,int x,int y)                                  
  if(key=='d'){ Keys.d=1;} 
  if(key=='w'){ Keys.w=1;}
  if(key=='s'){ Keys.s=1;}
- glutPostRedisplay();
- }
+ 	if (key == 'e') //Open Door
+ 	{
+ 		int xo = 0; if (pdx < 0){xo = -25;} else {xo = 25;}
+		int yo = 0; if (pdy < 0){yo = -25;} else {yo = 25;}
+		int ipx = px/64.0, ipx_add_xo = (px + xo)/64.0;
+		int ipy = py/64.0, ipy_add_yo = (py + yo)/64.0;
+		if (mapW[ipy_add_yo * mapX + ipx_add_xo] == 4) 
+		{
+			mapW[ipy_add_yo * mapX + ipx_add_xo] = 0;
+			//If pvalue at player offset equals 4(a door)
+			//and e is pressed then set the door's map value to 0
+		}
+	}
+ 	glutPostRedisplay();
+}
  
 void ButtonUp(unsigned char key,int x,int y)                                    //keyboard button pressed up
 {
