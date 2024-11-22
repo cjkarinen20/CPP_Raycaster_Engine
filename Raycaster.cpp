@@ -29,7 +29,7 @@ void init()
 {
 	glClearColor(0.3, 0.3, 0.3, 0);
 	gluOrtho2D(0, 1024, 512, 0);
-	px=300; py=300; pdx = cos(pa) * 5; pdy = sin(pa) * 5;
+	px=150; py=400; pdx = cos(pa) * 5; pdy = sin(pa) * 5;
 }
 
 //Draw player as a colored pixel/cube
@@ -59,7 +59,7 @@ int mapS = 64;
 int mapW[] = //Map Wall Layout 
 {
 	1,1,1,1,1,2,1,1,
-	1,0,0,11,0,0,0,1,
+	1,0,0,12,0,0,0,1,
 	1,0,0,3, 0,0,0,2,
 	1,0,0,3, 0,0,0,1,
 	1,0,0,3, 0,1,1,1,
@@ -81,14 +81,14 @@ int mapF[]=	//Map Floor Layout
 
 int mapC[]=	//Map Ceiling Layout
 {
- 	1,1,1,1,1,1,1,1,
- 	1,1,1,1,1,1,1,1,
- 	1,1,1,1,1,1,1,1,
- 	1,1,1,1,1,1,1,1,
- 	1,1,1,1,1,1,1,1,
- 	1,1,1,1,1,1,1,1,
- 	1,1,1,1,1,1,1,1,
- 	1,1,1,1,1,1,1,1,	
+ 	10,10,10,10,10,10,10,10,
+ 	10,10,10,10,10,10,10,10,
+ 	10,10,10,10,10,10,10,10,
+ 	10,10,10,10,10,10,10,10,
+ 	10,10,10,10,10,10,10,10,
+ 	10,10,10,10,10,10,10,10,
+ 	10,10,10,10,10,10,10,10,
+ 	10,10,10,10,10,10,10,10,	
 };
 
 void drawMap2D() //Draw the map
@@ -198,6 +198,7 @@ void drawRays3D()
 		else {texX = (int)(ry / 2.0) % 32; if (ra > 90 && ra < 270) {texX = 31 - texX;}}
 		for (y = 0; y < lineH; y++)
 		{
+			//Wall Texture Mapping
 			int pixel = ((int)texY*32+(int)texX)*3 + (hmt * 32 * 32 * 3);
 			int red = Map_Textures[pixel+0] * shade;
 			int green = Map_Textures[pixel+1] * shade;
@@ -205,42 +206,46 @@ void drawRays3D()
 			glPointSize(8); glColor3ub(red, green, blue); glBegin(GL_POINTS); glVertex2i (r * 8 + 530, y + lineO); glEnd();
 			texY += texY_Step;
 		}
-		//Draw Floors
-		for(y = lineO + lineH; y < 320; y++)
- 		{
-            float dy = y - (320 / 2.0), deg = degToRad(ra), raFix = cos(degToRad(FixAng(pa - ra)));
-            texX = px / 2 + cos(deg) * 158 * 32 / dy / raFix;
-            texY = py / 2 - sin(deg) * 158 * 32 / dy / raFix;
-            
-            int mp = mapF[(int)(texY / 32.0) * mapX + (int)(texX / 32.0)] * 32 * 32;
-            /*
-            float c = Map_Textures[((int)(texY) & 31) * 32 + ((int)(texX) & 31) + mp] * 0.7;
-            glColor3f(c / 1.3, c / 1.3, c); 
-			glPointSize(8);
-            glBegin(GL_POINTS); glVertex2i(r * 8 + 530, y); glEnd();
-            */
-            int pixel = (((int)(texY) & 31) * 32 + ((int)(texX) & 31)) * 3 + mp * 3;
-            int red = Map_Textures[pixel+0];
-            int green = Map_Textures[pixel+1];
-            int blue = Map_Textures[pixel+2];
-            glPointSize(8); glColor3ub(red, green, blue); glBegin(GL_POINTS); glVertex2i(r * 8 + 530, y); glEnd();
+		// Draw Floors and Ceilings
+		for (y = lineO + lineH; y < 320; y++) 
+		{
+    		float dy = y - 160.0; // 160 = 320 / 2
 
-			
- 			//Draw Ceiling
- 			/*
-  			mp = mapC[(int)(texY/32.0) * mapX+(int)(texX/32.0)] * 32 * 32;
-  			c = Map_Textures[((int)(texY)&31) * 32 + ((int)(texX) & 31)+mp] * 0.7;
-  			glColor3f(c/2.0,c/1.2,c/2.0);
-			glPointSize(8);
-			glBegin(GL_POINTS);
-			glVertex2i(r*8+530,320-y);
-			glEnd();
-			*/
-			
- 		}
- 		ra += DR; if(ra < 0) {ra += 2 * PI;} if (ra > 2 * PI) { ra -= 2 * PI;}
-		
+    		//Calculate straight distance to the floor/ceiling point
+    		float straight_dist = (mapS * 160) / dy;
+    		float corrected_dist = straight_dist / cos(ra - pa); //Corrected distance for fisheye effect
 
+    		//Texture coordinates calculation
+   			texX = px + cos(ra) * corrected_dist;
+    		texY = py + sin(ra) * corrected_dist;
+
+	    	// Floor Texture Mapping
+	    	int mp = mapF[(int)(texY / 64.0) * mapX + (int)(texX / 64.0)] * 32 * 32;
+	    	int pixel = (((int)(texY) & 31) * 32 + ((int)(texX) & 31)) * 3 + mp * 3;
+	    	int red = Map_Textures[pixel + 0] * 0.7;
+	    	int green = Map_Textures[pixel + 1] * 0.7;
+	    	int blue = Map_Textures[pixel + 2] * 0.7;
+	    	glColor3ub(red, green, blue);
+	    	glPointSize(8);
+	    	glBegin(GL_POINTS);
+	    	glVertex2i(r * 8 + 530, y);
+	    	glEnd();
+	
+	    	//Ceiling Texture Mapping
+	    	mp = mapC[(int)(texY / 64.0) * mapX + (int)(texX / 64.0)] * 32 * 32;
+	   		pixel = (((int)(texY) & 31) * 32 + ((int)(texX) & 31)) * 3 + mp * 3;
+	    	red = Map_Textures[pixel + 0] * 0.4; //Darker ceiling
+	    	green = Map_Textures[pixel + 1] * 0.4;
+	    	blue = Map_Textures[pixel + 2] * 0.4;
+	    	glColor3ub(red, green, blue);
+	    	glPointSize(8);
+	    	glBegin(GL_POINTS);
+	    	glVertex2i(r * 8 + 530, 320 - y);
+	    	glEnd();
+		}
+		ra += DR;
+		if (ra < 0) {ra += 2 * PI;}
+		if (ra > 2 * PI) {ra -= 2 * PI;}
 	}
 }
 
@@ -293,7 +298,7 @@ void ButtonDown(unsigned char key,int x,int y)                                  
 		int yo = 0; if (pdy < 0){yo = -25;} else {yo = 25;}
 		int ipx = px/64.0, ipx_add_xo = (px + xo)/64.0;
 		int ipy = py/64.0, ipy_add_yo = (py + yo)/64.0;
-		if (mapW[ipy_add_yo * mapX + ipx_add_xo] == 11) 
+		if (mapW[ipy_add_yo * mapX + ipx_add_xo] == 12) 
 		{
 			mapW[ipy_add_yo * mapX + ipx_add_xo] = 0;
 			//If pvalue at player offset equals 4(a door)
