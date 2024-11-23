@@ -4,6 +4,7 @@
 #include <math.h>
 #include "Textures/Brick1.ppm"
 #include "Textures/Map_Textures.ppm"
+#include "Textures/Sky_Texture.ppm"
 #define PI 3.1415926535
 #define P2 PI/2
 #define P3 3*PI/2
@@ -84,9 +85,9 @@ int mapC[]=	//Map Ceiling Layout
  	10,10,10,10,10,10,10,10,
  	10,10,10,10,10,10,10,10,
  	10,10,10,10,10,10,10,10,
- 	10,10,10,10,10,10,10,10,
- 	10,10,10,10,10,10,10,10,
- 	10,10,10,10,10,10,10,10,
+ 	10,10,10,0,0,10,10,10,
+ 	10,10,10,0,0,10,10,10,
+ 	10,10,10,0,0,10,10,10,
  	10,10,10,10,10,10,10,10,
  	10,10,10,10,10,10,10,10,	
 };
@@ -218,13 +219,19 @@ void drawRays3D()
     		//Texture coordinates calculation
    			texX = px + cos(ra) * corrected_dist;
     		texY = py + sin(ra) * corrected_dist;
-
+    		
+    		// Initialize floorShade and ceilingShade based on distance 
+			float floorShade = 0.7 * (1 - corrected_dist / 1000.0); 
+			if (floorShade < 0.3) floorShade = 0.3; 
+			float ceilingShade = 0.4 * (1 - corrected_dist / 1000.0); 
+			if (ceilingShade < 0.2) ceilingShade = 0.2;
+			
 	    	// Floor Texture Mapping
 	    	int mp = mapF[(int)(texY / 64.0) * mapX + (int)(texX / 64.0)] * 32 * 32;
 	    	int pixel = (((int)(texY) & 31) * 32 + ((int)(texX) & 31)) * 3 + mp * 3;
-	    	int red = Map_Textures[pixel + 0] * 0.7;
-	    	int green = Map_Textures[pixel + 1] * 0.7;
-	    	int blue = Map_Textures[pixel + 2] * 0.7;
+	    	int red = Map_Textures[pixel + 0] * floorShade;
+	    	int green = Map_Textures[pixel + 1] * floorShade;
+	    	int blue = Map_Textures[pixel + 2] * floorShade;
 	    	glColor3ub(red, green, blue);
 	    	glPointSize(8);
 	    	glBegin(GL_POINTS);
@@ -234,18 +241,40 @@ void drawRays3D()
 	    	//Ceiling Texture Mapping
 	    	mp = mapC[(int)(texY / 64.0) * mapX + (int)(texX / 64.0)] * 32 * 32;
 	   		pixel = (((int)(texY) & 31) * 32 + ((int)(texX) & 31)) * 3 + mp * 3;
-	    	red = Map_Textures[pixel + 0] * 0.4; //Darker ceiling
-	    	green = Map_Textures[pixel + 1] * 0.4;
-	    	blue = Map_Textures[pixel + 2] * 0.4;
-	    	glColor3ub(red, green, blue);
-	    	glPointSize(8);
-	    	glBegin(GL_POINTS);
-	    	glVertex2i(r * 8 + 530, 320 - y);
-	    	glEnd();
+	    	red = Map_Textures[pixel + 0] * ceilingShade; //Darker ceiling
+	    	green = Map_Textures[pixel + 1] * ceilingShade;
+	    	blue = Map_Textures[pixel + 2] * ceilingShade;
+	    	if (mp > 0) //If ceiling value is greater than 0, i.e. not the sky
+			{
+	    		glColor3ub(red, green, blue);
+	    		glPointSize(8);
+	    		glBegin(GL_POINTS);
+	    		glVertex2i(r * 8 + 530, 320 - y);
+	    		glEnd();	
+	    	}
+
 		}
 		ra += DR;
 		if (ra < 0) {ra += 2 * PI;}
 		if (ra > 2 * PI) {ra -= 2 * PI;}
+	}
+}
+
+//Renders the skybox image
+void drawSky()
+{
+	int x,y;
+	for (y = 0; y < 40; y++)
+	{
+		for (x = 0; x < 120; x++)
+		{
+			int xo = (int) pa * 2 - x; if (xo < 0){xo += 120;} xo = xo % 120;
+	    	int pixel = (y * 120 + xo) * 3;
+	    	int red = Sky_Texture[pixel + 0];
+	    	int green = Sky_Texture[pixel + 1];
+	    	int blue = Sky_Texture[pixel + 2];
+	    	glPointSize(4); glColor3ub(red, green, blue); glBegin(GL_POINTS); glVertex2i(x * 4 + 530, y * 4); glEnd();
+		}
 	}
 }
 
@@ -280,6 +309,7 @@ void display()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	drawMap2D();
 	drawPlayer();
+	drawSky();
 	drawRays3D();
 	glutSwapBuffers();
 	
