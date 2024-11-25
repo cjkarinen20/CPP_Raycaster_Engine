@@ -8,7 +8,7 @@
 #define PI 3.1415926535
 #define P2 PI/2
 #define P3 3*PI/2
-#define DR 0.0174533 //One degree in radians
+#define DR 0.008726646 //One degree in radians
 
 typedef struct
 {
@@ -121,7 +121,7 @@ void drawRays3D()
 	ra = pa - DR * 30;
 	if(ra < 0) { ra += 2 * PI; } 
 	if (ra > 2 * PI) { ra -= 2 * PI; } 
-	for (r = 0; r < 60; r++) 
+	for (r = 0; r < 120; r++) 
 	{ 
 		int vmt = 0, hmt = 0; //Vertical and Horizontal map texture numbers
 		//Check horizontal lines 
@@ -177,19 +177,19 @@ void drawRays3D()
 			{ dof = 8; } 
 		}
 		float shade = 1;
-		glColor3f(0,0.8,0);
+		//glColor3f(0,0.8,0);
 		if(disV < disH) {hmt = vmt; shade = 0.5; rx = vx; ry = vy; disT = disV; glColor3f(0.9,0,0);} //Vertical wall hit
 		if(disH < disV) {rx = hx; ry = hy; disT = disH; glColor3f(0.7,0,0);} // Horizontal wall hit
-		glLineWidth(3); glBegin(GL_LINES); glVertex2i(px, py); glVertex2i(rx, ry); glEnd(); 
+		//glLineWidth(3); glBegin(GL_LINES); glVertex2i(px, py); glVertex2i(rx, ry); glEnd(); 
 		
 		
 
 		float ca = pa - ra; if(ca < 0) {ca += 2 * PI;} if (ca > 2 * PI) { ca -= 2 * PI;} disT = disT * cos(ca); //Fix fisheye warping
-		float lineH = (mapS * 500)/disT; 
+		float lineH = (mapS * 640)/disT; 
 		float texY_Step = 32.0/(float)lineH;
 		float texY_Offset = 0;
-		if (lineH > 320) {texY_Offset = (lineH - 320)/2.0; lineH = 320;} //Line height
-		float lineO = 160 - lineH/2; //Line offset
+		if (lineH > 640) {texY_Offset = (lineH - 640)/2.0; lineH = 640;} //Line height
+		float lineO = 320 - lineH/2; //Line offset
 		
 		//Draw Walls
 		int y;
@@ -204,16 +204,16 @@ void drawRays3D()
 			int red = Map_Textures[pixel+0] * shade;
 			int green = Map_Textures[pixel+1] * shade;
 			int blue = Map_Textures[pixel+2] * shade;
-			glPointSize(8); glColor3ub(red, green, blue); glBegin(GL_POINTS); glVertex2i (r * 8 + 530, y + lineO); glEnd();
+			glPointSize(8); glColor3ub(red, green, blue); glBegin(GL_POINTS); glVertex2i (r * 8, y + lineO); glEnd();
 			texY += texY_Step;
 		}
 		// Draw Floors and Ceilings
-		for (y = lineO + lineH; y < 320; y++) 
+		for (y = lineO + lineH; y < 640; y++) 
 		{
-    		float dy = y - 160.0; // 160 = 320 / 2
+    		float dy = y - (640 / 2.0);
 
     		//Calculate straight distance to the floor/ceiling point
-    		float straight_dist = (mapS * 160) / dy;
+    		float straight_dist = (mapS * 320) / dy;
     		float corrected_dist = straight_dist / cos(ra - pa); //Corrected distance for fisheye effect
 
     		//Texture coordinates calculation
@@ -235,10 +235,9 @@ void drawRays3D()
 	    	glColor3ub(red, green, blue);
 	    	glPointSize(8);
 	    	glBegin(GL_POINTS);
-	    	glVertex2i(r * 8 + 530, y);
+	    	glVertex2i(r * 8, y);
 	    	glEnd();
 	
-	    	//Ceiling Texture Mapping
 	    	mp = mapC[(int)(texY / 64.0) * mapX + (int)(texX / 64.0)] * 32 * 32;
 	   		pixel = (((int)(texY) & 31) * 32 + ((int)(texX) & 31)) * 3 + mp * 3;
 	    	red = Map_Textures[pixel + 0] * ceilingShade; //Darker ceiling
@@ -249,14 +248,14 @@ void drawRays3D()
 	    		glColor3ub(red, green, blue);
 	    		glPointSize(8);
 	    		glBegin(GL_POINTS);
-	    		glVertex2i(r * 8 + 530, 320 - y);
+	    		glVertex2i(r * 8, 640 - y);
 	    		glEnd();	
 	    	}
 
 		}
 		ra += DR;
 		if (ra < 0) {ra += 2 * PI;}
-		if (ra > 2 * PI) {ra -= 2 * PI;}
+		if (ra > 2* PI) {ra -= 2 * PI;}
 	}
 }
 
@@ -273,7 +272,7 @@ void drawSky()
 	    	int red = Sky_Texture[pixel + 0];
 	    	int green = Sky_Texture[pixel + 1];
 	    	int blue = Sky_Texture[pixel + 2];
-	    	glPointSize(4); glColor3ub(red, green, blue); glBegin(GL_POINTS); glVertex2i(x * 4 + 530, y * 4); glEnd();
+	    	glPointSize(8); glColor3ub(red, green, blue); glBegin(GL_POINTS); glVertex2i(x * 8, y * 8); glEnd();
 		}
 	}
 }
@@ -307,8 +306,6 @@ void display()
 	glutPostRedisplay();
 	
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	drawMap2D();
-	drawPlayer();
 	drawSky();
 	drawRays3D();
 	glutSwapBuffers();
@@ -316,7 +313,7 @@ void display()
 
 }
 
-void ButtonDown(unsigned char key,int x,int y)                                  //keyboard button pressed down
+void ButtonDown(unsigned char key,int x,int y)	//keyboard button pressed down
 {
  if(key=='a'){ Keys.a=1;} 	
  if(key=='d'){ Keys.d=1;} 
@@ -349,13 +346,13 @@ void ButtonUp(unsigned char key,int x,int y)                                    
 
 void resize (int w, int h)
 {
-	glutReshapeWindow(1024, 512);
+	glutReshapeWindow(960, 640);
 }
 int main(int argc, char** argv)
 {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
-	glutInitWindowSize(1024, 512);
+	glutInitWindowSize(960, 640);
 	glutInitWindowPosition(200,200);
 	glutCreateWindow("Raycaster");
 	init();
